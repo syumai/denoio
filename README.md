@@ -20,7 +20,7 @@ js.Global().Set("compressFile",
 		var buf bytes.Buffer
 		zw := gzip.NewWriter(&buf)
 
-		// 1. Convert Deno (JS) side's Deno.File to Go's io.Reader interface
+		// 1. Convert Deno (JS) side's Deno.File to Go(Wasm)'s io.Reader interface
 		f := denoio.NewReader(args[0])
 		if _, err := io.Copy(zw, f); err != nil {
 			panic(err)
