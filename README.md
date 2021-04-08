@@ -4,8 +4,15 @@
 
 ## Usage
 
-- gzip compressing example using Go 1.16
-  - see example/compress for detail
+- In Go, `denoio.NewReader(v)` converts `Deno.Reader` into Go's `io.Reader`.
+- Similarly, in Go, `denoio.NewJSReader(r)` converts `io.Reader` into JS's
+  `Deno.Reader`.
+- In the same way, this package can convert `io.Writer`, `io.Seeker` and
+  `io.Closer`.
+
+## Example
+
+gzip compressing example. (see example/compress for detail)
 
 ### Go side
 
