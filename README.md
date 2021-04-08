@@ -4,8 +4,8 @@
 
 ## Usage
 
-- In Go, `denoio.NewReader(v)` converts `Deno.Reader` into Go's `io.Reader`.
-- Similarly, in Go, `denoio.NewJSReader(r)` converts `io.Reader` into JS's
+- In Go, `denoio.NewReader(v)` converts JS's `Deno.Reader` into Go's `io.Reader`.
+- Similarly, in Go, `denoio.NewJSReader(r)` converts Go's `io.Reader` into JS's
   `Deno.Reader`.
 - In the same way, this package can convert `io.Writer`, `io.Seeker` and
   `io.Closer`.
