@@ -82,14 +82,14 @@ func main() {
 			return js.ValueOf(writerSync.String())
 		}))
 
-	// Go seeker => JS seeker (seek)
+	// JS seeker => Go seeker => JS seeker (seek)
 	js.Global().Set("seekAsync",
 		js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 			f := denoio.NewSeeker(args[0])
 			return denoio.NewJSSeeker(f)
 		}))
 
-	// Go seeker => JS seeker (seekSync)
+	// JS seeker => Go seeker => JS seeker (seekSync)
 	js.Global().Set("seekSync",
 		js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 			f := denoio.NewSeeker(args[0])
