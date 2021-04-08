@@ -236,14 +236,16 @@ func (f *Reader) Read(p []byte) (int, error) {
 	if f.syncEnabled {
 		return readSync(f.v, p)
 	}
-	return read(f.v, p)
+	return 0, ErrUnimplemented
+	//FIXME support async read: return read(f.v, p)
 }
 
 func (f *Writer) Write(p []byte) (int, error) {
 	if f.syncEnabled {
 		return writeSync(f.v, p)
 	}
-	return write(f.v, p)
+	return 0, ErrUnimplemented
+	//FIXME support async write: return write(f.v, p)
 }
 
 // Seek
