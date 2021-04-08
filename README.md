@@ -1,6 +1,6 @@
 # denoio
 
-- denoio is a Go package to bind Deno and Go's I/O interfaces.
+- denoio is a Go package to bind Deno and Go(Wasm)'s I/O interfaces.
 
 ## Usage
 
