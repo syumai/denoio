@@ -1,5 +1,5 @@
 import mainwasm from "./mainwasm.ts";
-import { Go } from "../wasm_exec.js";
+import { Go } from "../../lib/wasm_exec.js";
 import { decode } from "https://deno.land/std@0.92.0/encoding/base64.ts";
 
 const bytes = decode(mainwasm);
@@ -7,7 +7,7 @@ const go = new Go();
 const result = await WebAssembly.instantiate(bytes, go.importObject);
 go.run(result.instance);
 
-const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 await sleep(1000);
 
 /***

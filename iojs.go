@@ -82,7 +82,6 @@ func registerSeekFunc(obj js.Value, s io.Seeker) {
 			for i, v := range pArgs {
 				ints[i] = v
 			}
-			global.Get("console").Call("log", ints...)
 			resolve := pArgs[0]
 			go func() {
 				offset, err := jss.Seek(args[0], args[1])

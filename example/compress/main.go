@@ -1,4 +1,4 @@
-//go:generate sh -c "tinygo build -opt=s -o main.wasm -target wasm ./ && cat main.wasm | deno run https://denopkg.com/syumai/binpack/mod.ts > mainwasm.ts && rm main.wasm"
+//go:generate sh -c "GOOS=js GOARCH=wasm go build -o main.wasm ./ && cat main.wasm | deno run https://denopkg.com/syumai/binpack/mod.ts > mainwasm.ts && rm main.wasm"
 package main
 
 import (
