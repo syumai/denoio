@@ -169,14 +169,25 @@ func read(v js.Value, p []byte) (int, error) {
 	promise := v.Call("read", ua)
 	resultCh := make(chan js.Value)
 	eofCh := make(chan struct{})
-	promise.Call("then", js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+
+	var then, catch js.Func
+	then = js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		defer then.Release()
 		result := args[0]
 		if result.IsNull() {
 			eofCh <- struct{}{}
+			return js.Undefined()
 		}
 		resultCh <- result
 		return js.Undefined()
-	}))
+	})
+	catch = js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		defer catch.Release()
+		result := args[0]
+		panic(result.Call("toString").String())
+	})
+	promise.Call("then", then).Call("catch", catch)
+
 	select {
 	case result := <-resultCh:
 		_ = js.CopyBytesToGo(p, ua)
@@ -201,10 +212,19 @@ func write(v js.Value, p []byte) (int, error) {
 	_ = js.CopyBytesToJS(ua, p)
 	promise := v.Call("write", ua)
 	resultCh := make(chan js.Value)
-	promise.Call("then", js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+	var then, catch js.Func
+	then = js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		defer then.Release()
 		resultCh <- args[0]
 		return js.Undefined()
-	}))
+	})
+	catch = js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		defer catch.Release()
+		close(resultCh)
+		result := args[0]
+		panic(result.Call("toString").String())
+	})
+	promise.Call("then", then).Call("catch", catch)
 	result := <-resultCh
 	return result.Int(), nil
 }
@@ -219,10 +239,20 @@ func writeSync(v js.Value, p []byte) (int, error) {
 func seek(v js.Value, offset int64, whence int) (int64, error) {
 	promise := v.Call("seek", js.ValueOf(offset), js.ValueOf(whence))
 	resultCh := make(chan js.Value)
-	promise.Call("then", js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+
+	var then, catch js.Func
+	then = js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		defer then.Release()
 		resultCh <- args[0]
 		return js.Undefined()
-	}))
+	})
+	catch = js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		defer catch.Release()
+		close(resultCh)
+		result := args[0]
+		panic(result.Call("toString").String())
+	})
+	promise.Call("then", then).Call("catch", catch)
 	result := <-resultCh
 	return int64(result.Int()), nil
 }
@@ -232,24 +262,27 @@ func seekSync(v js.Value, offset int64, whence int) (int64, error) {
 	return int64(result.Int()), nil
 }
 
+// Read reads data from Deno.SyncReader or Deno.Reader.
+// Notice: reading data from Deno.Reader must be called in Promise. Deno.SyncReader does not have this restriction.
 func (f *Reader) Read(p []byte) (int, error) {
 	if f.syncEnabled {
 		return readSync(f.v, p)
 	}
-	return 0, ErrUnimplemented
-	//FIXME support async read: return read(f.v, p)
+	return read(f.v, p)
 }
 
+// Write write data to Deno.SyncWriter or Deno.Writer.
+// Notice: writing data to Deno.Writer must be called in Promise. Deno.SyncWriter does not have this restriction.
 func (f *Writer) Write(p []byte) (int, error) {
 	if f.syncEnabled {
 		return writeSync(f.v, p)
 	}
-	return 0, ErrUnimplemented
-	//FIXME support async write: return write(f.v, p)
+	return write(f.v, p)
 }
 
-// Seek
-// whence: SeekStart = 0 / SeekCurrent = 1 / SeekEnd = 2
+// Seek seeks Deno.SyncSeeker or Deno.Seeker.
+// `whence` parameter corresponds to: SeekStart = 0, SeekCurrent = 1, SeekEnd = 2.
+// Notice: seeking Deno.Seeker must be called in Promise. Deno.SyncSeeker does not have this restriction.
 func (f *Seeker) Seek(offset int64, whence int) (int64, error) {
 	if f.syncEnabled {
 		return seekSync(f.v, offset, whence)
@@ -257,6 +290,7 @@ func (f *Seeker) Seek(offset int64, whence int) (int64, error) {
 	return seek(f.v, offset, whence)
 }
 
+// Close closes Deno.Closer.
 func (f *Closer) Close() error {
 	f.v.Call("close")
 	return nil

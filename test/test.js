@@ -18,9 +18,21 @@ const exampleBytes = Deno.readAllSync(exampleFile);
 const exampleStr = dec.decode(exampleBytes);
 exampleFile.close();
 
-Deno.test("readAsync", async () => {
-  const goReader = readAsync();
-  const result = Deno.readAllSync(goReader);
+Deno.test("readAsyncFromGo", async () => {
+  const f = await Deno.open("./example.txt");
+  const reader = {
+    read() {
+      return f.read(...arguments);
+    },
+  };
+  const result = await readAsync(reader);
+  f.close();
+  assertEquals(result, exampleStr);
+});
+
+Deno.test("readerAsyncFromGo", async () => {
+  const goReader = getReaderAsyncFromGo()
+  const result = await Deno.readAll(goReader);
   assertEquals(result, exampleBytes);
 });
 
@@ -37,8 +49,6 @@ Deno.test("readSync", () => {
   assertEquals(result, exampleBytes);
 });
 
-/*
-//FIXME: support this feature
 Deno.test("writeAsyncFromGo", async () => {
     const buf = new Buffer();
     const writer = {
@@ -46,10 +56,9 @@ Deno.test("writeAsyncFromGo", async () => {
             return buf.write(...arguments)
         },
     };
-    writeAsyncFromGo(writer);
-    assertEquals(dec.decode(Deno.readAllSync(buf)), "wrote from Go");
+    await writeAsyncFromGo(writer);
+    assertEquals(dec.decode(Deno.readAllSync(buf)), "wrote async from Go");
 });
- */
 
 Deno.test("writeSyncFromGo", () => {
   const buf = new Buffer();

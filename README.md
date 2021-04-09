@@ -51,13 +51,18 @@ const compressed = compressFile(file);
 Deno.copy(compressed, Deno.stdout);
 ```
 
+## Notice
+
+* io.Reader / io.Writer / io.Seeker converted from Deno must be used in Promise.
+  - Deno.SyncReader / Deno.SyncWriter / Deno.SyncSeeker do not have this restriction.
+
 ## Status
 
 ### Converting JS (Deno) to Go (Wasm)
 
-- [ ] JS reader to Go reader
+- [x] JS reader to Go reader
 - [x] JS syncReader to Go reader
-- [ ] JS writer to Go writer
+- [x] JS writer to Go writer
 - [x] JS syncWriter to Go writer
 - [x] JS seeker to Go seeker
 - [x] JS syncSeeker to Go seeker
