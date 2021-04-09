@@ -23,7 +23,9 @@ type (
 func registerReadFunc(obj js.Value, r io.Reader) {
 	jr := &jsReader{r}
 	readFunc := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
-		p := newPromise(func(_ js.Value, pArgs []js.Value) interface{} {
+		var cb js.Func
+		cb = js.FuncOf(func(_ js.Value, pArgs []js.Value) interface{} {
+			defer cb.Release()
 			resolve := pArgs[0]
 			go func() {
 				n, err := jr.Read(args[0])
@@ -34,7 +36,7 @@ func registerReadFunc(obj js.Value, r io.Reader) {
 			}()
 			return js.Undefined()
 		})
-		return p
+		return newPromise(cb)
 	})
 	readSyncFunc := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		n, err := jr.Read(args[0])
@@ -50,7 +52,9 @@ func registerReadFunc(obj js.Value, r io.Reader) {
 func registerWriteFunc(obj js.Value, w io.Writer) {
 	jw := &jsWriter{w}
 	writeFunc := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
-		p := newPromise(func(_ js.Value, pArgs []js.Value) interface{} {
+		var cb js.Func
+		cb = js.FuncOf(func(_ js.Value, pArgs []js.Value) interface{} {
+			defer cb.Release()
 			resolve := pArgs[0]
 			go func() {
 				n, err := jw.Write(args[0])
@@ -61,7 +65,7 @@ func registerWriteFunc(obj js.Value, w io.Writer) {
 			}()
 			return js.Undefined()
 		})
-		return p
+		return newPromise(cb)
 	})
 	writeSyncFunc := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		n, err := jw.Write(args[0])
@@ -77,7 +81,9 @@ func registerWriteFunc(obj js.Value, w io.Writer) {
 func registerSeekFunc(obj js.Value, s io.Seeker) {
 	jss := &jsSeeker{s}
 	seekFunc := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
-		p := newPromise(func(_ js.Value, pArgs []js.Value) interface{} {
+		var cb js.Func
+		cb = js.FuncOf(func(_ js.Value, pArgs []js.Value) interface{} {
+			defer cb.Release()
 			ints := make([]interface{}, len(pArgs))
 			for i, v := range pArgs {
 				ints[i] = v
@@ -92,7 +98,7 @@ func registerSeekFunc(obj js.Value, s io.Seeker) {
 			}()
 			return js.Undefined()
 		})
-		return p
+		return newPromise(cb)
 	})
 	seekSyncFunc := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		offset, err := jss.Seek(args[0], args[1])

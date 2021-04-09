@@ -20,11 +20,30 @@ var (
 var exampleBytes []byte
 
 func main() {
+	// JS reader => Go reader (read all bytes)
+	js.Global().Set("readAsync", js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		f := denoio.NewReader(args[0])
+		var cb js.Func
+		cb = js.FuncOf(func(_ js.Value, pArgs []js.Value) interface{} {
+			defer cb.Release()
+			resolve := pArgs[0]
+			go func() {
+				b, err := io.ReadAll(f)
+				if err != nil {
+					panic(err)
+				}
+				resolve.Invoke(js.ValueOf(string(b)))
+			}()
+			return js.Undefined()
+		})
+		return newPromise(cb)
+	}))
+
 	// Go reader => JS reader (read)
-	js.Global().Set("readAsync",
+	js.Global().Set("getReaderAsyncFromGo",
 		js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
-			b := bytes.NewReader(exampleBytes)
-			return denoio.NewJSReader(b)
+			r := bytes.NewReader(exampleBytes)
+			return denoio.NewJSReader(r)
 		}))
 
 	// JS syncReader => Go reader => JS reader (readSync)
@@ -42,11 +61,21 @@ func main() {
 	js.Global().Set("writeAsyncFromGo",
 		js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 			f := denoio.NewWriter(args[0])
-			r := strings.NewReader("wrote async from Go")
-			if _, err := io.Copy(f, r); err != nil {
-				panic(err)
-			}
-			return js.Undefined()
+			var cb js.Func
+			cb = js.FuncOf(func(_ js.Value, pArgs []js.Value) interface{} {
+				defer cb.Release()
+				resolve := pArgs[0]
+				r := strings.NewReader("wrote async from Go")
+				go func() {
+					n, err := io.Copy(f, r)
+					if err != nil {
+						panic(err)
+					}
+					resolve.Invoke(js.ValueOf(n))
+				}()
+				return js.Undefined()
+			})
+			return newPromise(cb)
 		}))
 
 	// JS syncWriter => Go writer (write)
