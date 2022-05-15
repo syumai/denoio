@@ -1,11 +1,11 @@
 import testmainwasm from "./testmainwasm.ts";
 import { Go } from "../lib/wasm_exec.js";
-import { decode } from "https://deno.land/std@0.92.0/encoding/base64.ts";
-import { Buffer } from "https://deno.land/std@0.92.0/io/buffer.ts";
+import { decode } from "https://deno.land/std@0.139.0/encoding/base64.ts";
+import { Buffer } from "https://deno.land/std@0.139.0/io/buffer.ts";
 import {
   assertEquals,
   assertThrows,
-} from "https://deno.land/std@0.92.0/testing/asserts.ts";
+} from "https://deno.land/std@0.139.0/testing/asserts.ts";
 const dec = new TextDecoder();
 
 const bytes = decode(testmainwasm);
